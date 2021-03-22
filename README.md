@@ -41,6 +41,16 @@ Add an entry with the following settings
 * Authenticate: `gcloud auth login`
 * `npm run deploy`
 
+## Testing with UDMP
+
+You can test it with the UDMP by ssh in and running the command
+
+```bash
+/usr/sbin/inadyn -n -s -C -f /run/inadyn.conf -1 -l debug --foreground
+```
+
+This will show the HTTP requests and responses.
+
 ## License
 
 See [LICENSE](LICENSE) for more details.
