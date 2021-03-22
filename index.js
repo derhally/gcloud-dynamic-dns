@@ -25,11 +25,15 @@ exports.updateHost = function (req, res) {
     if (settings.useToken) {
         provided_secret = req.query.token || req.body.token;
     }
-    else {
+    else if (req.headers.authorization) {
         const base64Credentials = req.headers.authorization.split(' ')[1];
         const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
         const [username, password] = credentials.split(':');
         provided_secret = password
+    }
+    else {
+        respondWithError(401, 'unauthorized', 'Login Required', res);
+        return;
     }
 
     console.log(req.originalUrl)
@@ -39,7 +43,7 @@ exports.updateHost = function (req, res) {
     var host = req.query.host || req.body.host;
     var zone = req.query.zone || req.body.zone || settings.dnsZone;
 
-    if (provided_secret != settings.secretToken) {
+    if (!provided_secret || !settings.secretToken || provided_secret != settings.secretToken) {
         respondWithError(401, 'unauthorized', 'Login Required', res);
         return;
     }

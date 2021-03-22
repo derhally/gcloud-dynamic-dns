@@ -13,7 +13,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "functions-framework --target=updateHost",
-    "deploy": "gcloud functions deploy updateHost --source . --runtime nodejs12 --trigger-http --allow-unauthenticated"
+    "deploy": "gcloud functions deploy updateHost --source . --runtime nodejs12 --trigger-http --allow-unauthenticated --env-vars-file .env.yaml"
   },
   "author": "",
   "license": "MIT",
