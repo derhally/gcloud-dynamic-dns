@@ -32,7 +32,7 @@ Settings are loaded from environment variables
 | Config     | Description
 |------------|---------------
 |`DNS_ZONE`     | The Google Cloud DNS Zone name/id in which the records reside.
-|`USE_TOKEN` | Indicates whether to use the token on the query parameter.  If not set will use password from the Authorization headers
+|`USE_TOKEN` | Set to the literal string `"true"` to read the secret from the `token` query/body parameter. Any other value (including unset) falls back to the password in the HTTP Basic `Authorization` header.
 |`SECRET_TOKEN` | A secret token, used to authenticate users.
 |`ALLOWED_HOSTS`| A list of hosts that callers are allowed to update. May include `"*"` to allow all hosts.
 |`TTL`         | Time to live for records in seconds.
@@ -52,28 +52,32 @@ Add an entry with the following settings
 
 ## Deploy to Google Cloud Functions
 
-* Create an initial A record exist for the host you want to update, or the function will fail
 * Setup [Google Cloud Functions](https://cloud.google.com/functions/docs/quickstart)
 * [Install](https://cloud.google.com/sdk/install) the `gcloud` CLI tool
 * Authenticate: `gcloud auth login`
-* create a file `.env.yaml` that contains the environment variables listed in the Configuration section
+* Create a `.env.yaml` file with the runtime environment variables:
 ```yaml
 DNS_ZONE: "zone id"
-SECRET_TOKEN: "some secret
 ALLOWED_HOSTS: "*"
-TTL: "10"
+TTL: "60"
 ```
-
-To create the initial version of the function run the command (substituting the service account value)
-
-```shell
-gcloud functions deploy updateHost --source . --runtime nodejs12 \
-    --trigger-http --allow-unauthenticated --max-instances=1 \
-    --service-account=<service-account> \
-    --env-vars-file=.env.yaml 
+* Store the secret token in [Secret Manager](https://cloud.google.com/secret-manager):
+```bash
+echo -n "your-secret" | gcloud secrets create dynamic-dns-token \
+    --replication-policy="automatic" --data-file=-
 ```
-
-You can run `npm run deploy` to update the existing function
+* Grant the service account access to the secret:
+```bash
+gcloud secrets add-iam-policy-binding dynamic-dns-token \
+    --role="roles/secretmanager.secretAccessor" \
+    --member="serviceAccount:<service-account>"
+```
+* Create a `.env` file with the deployment variables (not checked in):
+```
+GCP_PROJECT=<your-project-id>
+DEPLOY_SERVICE_ACCOUNT=<service-account-email>
+```
+* Run `npm run deploy` to deploy the function
 
 ## Testing with UDMP
 

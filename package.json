@@ -1,19 +1,21 @@
 {
   "name": "dynamic-cloud-dns",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Dynamic DNS functionality backed by Google Cloud DNS.",
   "main": "index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
-    "@google-cloud/dns": "^2.1.0",
-    "ip": "^1.1.5"
+    "@google-cloud/dns": "^5.3.2"
   },
   "devDependencies": {
-    "@google-cloud/functions-framework": "^1.7.1"
+    "@google-cloud/functions-framework": "^5.0.2"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "functions-framework --target=updateHost",
-    "deploy": "gcloud functions deploy updateHost --source . --runtime nodejs12 --trigger-http --allow-unauthenticated --env-vars-file .env.yaml"
+    "deploy": ". ./.env && test -n \"$GCP_PROJECT\" || { echo 'Error: GCP_PROJECT is not set'; exit 1; } && test -n \"$DEPLOY_SERVICE_ACCOUNT\" || { echo 'Error: DEPLOY_SERVICE_ACCOUNT is not set'; exit 1; } && gcloud functions deploy dynamic-dns --gen2 --region=us-central1 --project=$GCP_PROJECT --runtime=nodejs22 --source=. --entry-point=updateHost --trigger-http --allow-unauthenticated --memory=256Mi --max-instances=1 --timeout=60s --service-account=$DEPLOY_SERVICE_ACCOUNT --env-vars-file=.env.yaml --set-secrets=SECRET_TOKEN=dynamic-dns-token:latest"
   },
   "author": "",
   "license": "MIT",
